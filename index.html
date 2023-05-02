@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Country Info</title>
+<style>
+* {
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+body {
+    background: #EFEFEF;
+}
+		body.dark-mode {
+  background-color: #222;
+  color: #000;
+}
+
+.head {
+    height: 60px;
+    width: 100%;
+    background: #fff;
+    box-shadow: 2px 5px 5px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+}
+#app {
+    display: flex;
+    flex-wrap: wrap;
+	gap:2rem;
+    
+}
+.country-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 5px 5px rgba(0,0,0,0.1);
+    border-radius: 5px;
+    flex-basis: calc(25% - 2rem); /* 4 items per row */
+    margin-bottom: 2.5rem;
+    background: #fff;
+}
+.search-input {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 1rem 0;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+.country-card img {
+    height: 150px;
+    width: 100%;
+    object-fit: cover;
+    margin-bottom: 10px;
+}
+.country-card h2 {
+    font-size: 20px;
+}
+.country-card p:last-child {
+    margin-bottom: 10px;
+}
+.wrap {
+    max-width: 1366px;
+    margin: 0 auto;
+}
+.filterDiv {
+    display: flex;
+    justify-content: space-between;
+    height: 90px;
+    align-items: center;
+}
+	.shifter{
+		cursor:pointer;
+	}
+	
+	#CurrencyFiltter{
+		height: 40px;
+		width: 200px;
+		
+	}
+
+
+
+@media screen and (max-width: 768px) {
+.country-card {
+    flex-basis: calc(33.33% - 1rem); /* 3 items per row */
+}
+}
+
+@media screen and (max-width: 576px) {
+.country-card {
+    flex-basis: calc(50% - 1rem); /* 2 items per row */
+}
+}
+
+@media screen and (max-width: 480px) {
+.country-card {
+    flex-basis: calc(100% - 1rem); /* 1 item per row */
+}
+}
+.modal {
+  position: fixed;
+  top: 0%;
+  left: 0%;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+	.modal-content{
+		position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 400px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+		flex-direction: column;
+	}
+.modal h3 {
+  margin-top: 0;
+}
+	.modal img{
+		width: 200px;
+	}
+.modal p {
+  margin: 0.5rem 0;
+	}
+	.close-button{
+	position: absolute;
+		top:0px;
+		right: 10px;
+		cursor: pointer;
+		font-size: 40px;
+	}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <div class="title">
+      <h2>Where in the world?</h2>
+    </div>
+    <div class="shifter">Dark</div>
+  </div>
+  <div class="filterDiv">
+    <div>
+      <input type="text" id="search-input" class="search-input" placeholder="Search countries...">
+    </div>
+    <div><select id="CurrencyFiltter" >
+  <option value="">All currencies</option>
+</select></div>
+  </div>
+  <div id="app"> </div>
+
+</div>
+<script>
+	
+	const shifter = document.querySelector('.shifter');
+shifter.addEventListener('click', function() {
+  document.body.classList.toggle('dark-mode');
+  if (document.body.classList.contains('dark-mode')) {
+    shifter.textContent = 'Light';
+  } else {
+    shifter.textContent = 'Dark';
+  }
+});
+    const apiUrl = 'https://countriesnow.space/api/v0.1/countries/info?returns=unicode,currency,flag,dialCode';
+
+async function getCountries() {
+  const response = await fetch(apiUrl);
+  const data = await response.json();
+  return data.data;
+}
+
+function renderCountries(countries) {
+  const app = document.getElementById('app');
+  app.innerHTML = '';
+  for (let country of countries) {
+    const countryCard = document.createElement('div');
+    countryCard.classList.add('country-card');
+    countryCard.innerHTML = `
+      <img src="${country.flag}" alt="${country.name}" />
+      <h2>${country.name}</h2>
+      <p>Unicode: ${country.unicode}</p>
+      <p>Currency: ${country.currency}</p>
+      <p>Dial Code: ${country.dialCode}</p>
+    `;
+    countryCard.addEventListener('click', () => {
+      showCountryDetails(country);
+    });
+    app.appendChild(countryCard);
+  }
+}
+
+function showCountryDetails(country) {
+  const modal = document.createElement('div');
+  modal.classList.add('modal');
+
+  const modalContent = document.createElement('div');
+  modalContent.classList.add('modal-content');
+  modalContent.innerHTML = `
+    <img src="${country.flag}" alt="${country.name}" />
+    <h2>${country.name}</h2>
+    <p>Unicode: ${country.unicode}</p>
+    <p>Currency: ${country.currency}</p>
+    <p>Dial Code: ${country.dialCode}</p>
+    <p>Capital: ${country.capital}</p>
+    <p>Population: ${country.population}</p>
+    <p>Area: ${country.area} sq. km</p>
+  `;
+
+  const closeButton = document.createElement('span');
+  closeButton.classList.add('close-button');
+  closeButton.innerHTML = '&times;';
+  closeButton.addEventListener('click', () => {
+    modal.remove();
+  });
+
+  modalContent.appendChild(closeButton);
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+}
+
+async function init() {
+  const countries = await getCountries();
+  const currencyFilter = document.getElementById('CurrencyFiltter');
+
+  // extract all available currencies from the countries data
+  const currencies = countries.reduce((acc, country) => {
+    if (!acc.includes(country.currency)) {
+      acc.push(country.currency);
+    }
+    return acc;
+  }, []);
+
+  // populate the currency filter select options
+  currencies.forEach(currency => {
+    const option = document.createElement('option');
+    option.value = currency;
+    option.textContent = currency;
+    currencyFilter.appendChild(option);
+  });
+
+  // render all countries by default
+  renderCountries(countries);
+
+  // add event listener for the currency filter
+  currencyFilter.addEventListener('change', () => {
+    const selectedCurrency = currencyFilter.value;
+    if (selectedCurrency === '') {
+      // if no currency is selected, render all countries
+      renderCountries(countries);
+    } else {
+      // filter countries by the selected currency
+      const filteredCountries = countries.filter(country => country.currency === selectedCurrency);
+      renderCountries(filteredCountries);
+    }
+  });
+
+  // add event listener for the search input
+  const searchInput = document.getElementById('search-input');
+  searchInput.addEventListener('input', () => {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filteredCountries = countries.filter(country => country.name.toLowerCase().includes(searchTerm));
+    renderCountries(filteredCountries);
+  });
+}
+
+window.onload = init;
+
+    </script>
+</body>
+</html>
